@@ -11,19 +11,26 @@ public class Receipt {
     }
 
     private BigDecimal tax;
+    private BigDecimal getReducedPrice(Product product, List<OrderItem> items){
+        OrderItem curItem = findOrderItemByProduct(items, product);
+        BigDecimal reducedPrice = product.getPrice()
+                .multiply(product.getDiscountRate())
+                .multiply(new BigDecimal(curItem.getCount()));
+        return reducedPrice;
+    }
 
-    public double CalculateGrandTotal(List<Product> products, List<OrderItem> items) {
+    private BigDecimal CalculateReducedPrice(List<Product> products, List<OrderItem> items){
         BigDecimal subTotal = calculateSubtotal(products, items);
 
         for (Product product : products) {
-            OrderItem curItem = findOrderItemByProduct(items, product);
-
-            BigDecimal reducedPrice = product.getPrice()
-                    .multiply(product.getDiscountRate())
-                    .multiply(new BigDecimal(curItem.getCount()));
-
-            subTotal = subTotal.subtract(reducedPrice);
+            subTotal = subTotal.subtract(getReducedPrice(product,items));
         }
+        return subTotal;
+    }
+
+    public double CalculateGrandTotal(List<Product> products, List<OrderItem> items) {
+        BigDecimal subTotal=CalculateReducedPrice(products,items);
+
         BigDecimal taxTotal = subTotal.multiply(tax);
         BigDecimal grandTotal = subTotal.add(taxTotal);
 
